@@ -1,6 +1,8 @@
 <?php
+/*
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+*/
 
 /**
  * Very basic websocket client.
@@ -246,6 +248,8 @@ class WebsocketClient
 	}
 }
 
+/*
 $WebSocketClient = new WebsocketClient('127.0.0.1', 8000, '/echo');
 var_dump($WebSocketClient->sendData('test', 'ping'));
 unset($WebSocketClient);
+*/
