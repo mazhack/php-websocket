@@ -2,7 +2,7 @@ $(document).ready ->
 	log = (msg) -> $('#log').prepend("#{msg}<br />")
 	# serverUrl = 'ws://localhost:8000/status'
 	serverUrl = 'ws://'+window.location.hostname+':8000/status'		
-	if $.browser.mozilla
+	if window.MozWebSocket
 		socket = new MozWebSocket(serverUrl)
 	else
 		socket = new WebSocket(serverUrl)
