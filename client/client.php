@@ -4,6 +4,14 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 */
 
+class WebsocketClientError extends Exception {
+  
+  public function __construct($message, $code){
+    
+  }
+  
+}
+
 /**
  * Very basic websocket client.
  * Supporting draft hybi-10. 
@@ -11,7 +19,6 @@ error_reporting(E_ALL);
  * @author Simon Samtleben <web@lemmingzshadow.net>
  * @version 2011-10-18
  */
-
 class WebsocketClient
 {
 	private $_Socket = null;
@@ -47,6 +54,9 @@ class WebsocketClient
 		$header.= "Sec-WebSocket-Version: 8\r\n";			
 		
 		$this->_Socket = fsockopen($host, $port, $errno, $errstr, 2); 
+		if (!$this->_Socket) {
+			throw new WebsocketClientError($errstr, $errno);
+		}
 		fwrite($this->_Socket, $header) or die('Error: ' . $errno . ':' . $errstr); 
 		$response = fread($this->_Socket, 2000);		
 
@@ -249,7 +259,11 @@ class WebsocketClient
 }
 
 /*
-$WebSocketClient = new WebsocketClient('127.0.0.1', 8000, '/echo');
-var_dump($WebSocketClient->sendData('test', 'ping'));
-unset($WebSocketClient);
+try{
+  $WebSocketClient = new WebsocketClient('127.0.0.1', 8000, '/echo');
+  var_dump($WebSocketClient->sendData('test', 'ping'));
+  unset($WebSocketClient);
+}catch(WebsocketClientError $ex){
+  echo "can't connect to server";
+}
 */
