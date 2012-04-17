@@ -1,8 +1,4 @@
 <?php
-/*
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-*/
 
 class WebsocketClientError extends Exception {
   
@@ -29,11 +25,14 @@ class WebsocketClient
 	{
 		$this->disconnect();
 	}
-
+	
 	public function sendData($data, $type = 'text', $masked = true)
-	{		
-		$res = fwrite($this->_Socket, $this->_hybi10Encode($data, $type, $masked));
-		return $res;
+	{
+		fwrite($this->_Socket, $this->_hybi10Encode($data, $type, $masked));
+		$wsData = fread($this->_Socket, 2000);
+		$retData = $this->_hybi10Decode($wsData);
+	
+		return $retData;
 	}
 
 	public function connect($host, $port, $path, $origin = false)
