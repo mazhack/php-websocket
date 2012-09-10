@@ -124,7 +124,11 @@ class Connection
 		$response.= "Upgrade: websocket\r\n";
 		$response.= "Connection: Upgrade\r\n";
 		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
-		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";		
+		if(isset($headers['Sec-WebSocket-Protocol']) && !empty($headers['Sec-WebSocket-Protocol']))
+		{
+			$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n";
+		}
+		$response.= "\r\n";
 		if(false === ($this->server->writeBuffer($this->socket, $response)))
 		{
 			return false;
@@ -212,6 +216,14 @@ class Connection
 			$this->server->getApplication('status')->clientActivity($this->port);
 		}
 		
+		if(!isset($data['type']))
+		{
+			$this->sendHttpResponse(401);
+			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
+			$this->server->removeClientOnError($this);
+			return false;
+		}
+		
 		switch($decodedData['type'])
 		{
 			case 'text':				
@@ -247,7 +259,7 @@ class Connection
 		return true;
     }   
     
-    public function send($payload, $type = 'text', $masked = true)
+    public function send($payload, $type = 'text', $masked = false)
     {		
 		$encodedData = $this->hybi10Encode($payload, $type, $masked);			
 		if(!$this->server->writeBuffer($this->socket, $encodedData))

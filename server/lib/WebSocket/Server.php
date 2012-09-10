@@ -9,8 +9,8 @@ namespace WebSocket;
  */
 class Server extends Socket
 {   
-    private $clients = array();
-    private $applications = array();
+    protected $clients = array();
+    protected $applications = array();
 	private $_ipStorage = array();
 	private $_requestStorage = array();
 	
@@ -25,6 +25,17 @@ class Server extends Socket
     {
         parent::__construct($host, $port, $ssl);
         $this->log('Server created');
+    }
+
+    /**
+     * Creates a connection from a socket resource
+     *
+     * @param resource $resource A socket resource
+     * @return Connection
+     */
+    protected function createConnection($resource)
+    {
+        return new Connection($this, $resource);
     }
 
 	/**
@@ -47,7 +58,7 @@ class Server extends Socket
 					}
 					else
 					{
-						$client = new Connection($this, $ressource);
+						$client = $this->createConnection($ressource);
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
 						
