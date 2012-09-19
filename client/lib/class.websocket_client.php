@@ -29,7 +29,6 @@ class WebsocketClient
 
   public function sendData($data, $type = 'text', $masked = true)
   {
-    //$this->checkConnection();
     if($this->_connected === false)
     {
       return false;
@@ -63,7 +62,7 @@ class WebsocketClient
     }
     $header.= "Sec-WebSocket-Version: 13\r\n";
 
-    $this->_Socket = fsockopen($this->_host, $this->_port, $errno, $errstr, 2);
+    $this->_Socket = @fsockopen($this->_host, $this->_port, $errno, $errstr, 2);
 
     if($this->_Socket === false){
       $this->_connected=false;
@@ -74,6 +73,11 @@ class WebsocketClient
 
     @fwrite($this->_Socket, $header);
     $response = @fread($this->_Socket, 1500);
+    if(empty($response))
+    {
+      $this->_connected=false;
+      return false;
+    }
     preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
     $keyAccept = trim($matches[1]);
     $expectedResonse = base64_encode(pack('H*', sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
@@ -111,13 +115,13 @@ class WebsocketClient
   public function disconnect()
   {
     $this->_connected = false;
-    fclose($this->_Socket);
+    @fclose($this->_Socket);
   }
 
   public function reconnect()
   {
     $this->_connected = false;
-    fclose($this->_Socket);
+    @fclose($this->_Socket);
     $this->connect($this->_host, $this->_port, $this->_path, $this->_origin);
   }
 
@@ -322,4 +326,3 @@ class WebsocketClient
   }
 
 }
-
