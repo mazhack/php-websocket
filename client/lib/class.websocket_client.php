@@ -44,6 +44,11 @@ class WebsocketClient
     }
 
     $buffer = fread($this->_Socket, 2000);
+    // validamos que se hayan leido los datos
+    if(empty($buffer))
+    {
+    	return false;
+    }
     $retData = $this->_hybi10Decode($buffer);
     return $retData;
   }

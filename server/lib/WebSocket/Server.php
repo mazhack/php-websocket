@@ -40,15 +40,30 @@ class Server extends Socket
 
 	/**
 	 * Main server method. Listens for connections, handles connectes/disconnectes, e.g.
+	 *
 	 */
 	public function run()
 	{
 		while(true)
 		{
+
+		    $exceptions_sockets=array();
+		    $write_sockets=array();
+
+		    foreach ($this->clients as $c){
+		      $s=$c->hasDataToWrite();
+		      if($s!==false){
+		        $write_sockets[]=$s;
+		      }
+		      $exceptions_sockets[]=$s;
+		    }
+
 			$changed_sockets = $this->allsockets;
-			@stream_select($changed_sockets, $write = null, $except = null, 0, 200000);
-			foreach($changed_sockets as $socket)
-			{
+
+			@stream_select($changed_sockets, $write_sockets, $exceptions_sockets, 0, 100000);
+
+			// leemos
+			foreach($changed_sockets as $socket) {
 				if($socket == $this->master)
 				{
 					if(($ressource = stream_socket_accept($this->master, 2)) === false)
@@ -58,11 +73,11 @@ class Server extends Socket
 					}
 					else
 					{
-					    stream_set_timeout($ressource, 2);
 						$client = $this->createConnection($ressource);
+						stream_set_timeout($ressource, 2);
+						stream_set_blocking($ressource, 0);
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
-
 // 						if(count($this->clients) > $this->_maxClients)
 // 						{
 // 							$client->onDisconnect();
@@ -98,23 +113,47 @@ class Server extends Socket
 
 					if($bytes === 0)
 					{
+					    echo "desconectando cliente en 0\n";
 						$client->onDisconnect();
 						continue;
 					}
 					elseif($data === false)
 					{
+					    echo "desconectando cliente en false\n";
 						$this->removeClientOnError($client);
 						continue;
 					}
-// 					elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
-// 					{
-// 						$client->onDisconnect();
-// 					}
+ 					elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
+ 					{
+ 						$client->onDisconnect();
+ 					}
 					else
 					{
 						$client->onData($data);
 					}
 				}
+			}
+
+			// escribimos
+			foreach($write_sockets as $socket) {
+				$client = $this->clients[(int)$socket];
+				if(!is_object($client)){
+					unset($this->clients[(int)$socket]);
+					continue;
+				}
+
+				$client->doWrite();
+			}
+
+			// errores?
+			foreach ($exceptions_sockets as $socket) {
+				$client = $this->clients[(int)$socket];
+				if(!is_object($client)){
+					unset($this->clients[(int)$socket]);
+					continue;
+				}
+				echo "error en while\n";
+				$this->removeClientOnError($client);
 			}
 		}
 	}
@@ -192,11 +231,6 @@ class Server extends Socket
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index], $client);
 
-		// trigger status application:
-// 		if($this->getApplication('status') !== false)
-// 		{
-// 			$this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-// 		}
 		unset($clientId, $clientIp, $clientPort, $resource);
 	}
 
@@ -211,25 +245,7 @@ class Server extends Socket
 			$client->getClientApplication()->onDisconnect($client);
 		}
 
-		$resource = $client->getClientSocket();
-		$clientId = $client->getClientId();
-		$clientIp = $client->getClientIp();
-		$clientPort = $client->getClientPort();
-		$this->_removeIpFromStorage($client->getClientIp());
-		if(isset($this->_requestStorage[$clientId]))
-		{
-			unset($this->_requestStorage[$clientId]);
-		}
-		unset($this->clients[(int)$resource]);
-		$index = array_search($resource, $this->allsockets);
-		unset($this->allsockets[$index], $client);
-
-		// trigger status application:
-// 		if($this->getApplication('status') !== false)
-// 		{
-// 			$this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-// 		}
-		unset($resource, $clientId, $clientIp, $clientPort);
+		$this->removeClientOnClose($client);
 	}
 
 	/**
