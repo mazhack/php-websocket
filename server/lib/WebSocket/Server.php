@@ -120,7 +120,7 @@ class Server extends Socket
 					elseif($data === false)
 					{
 					    echo "desconectando cliente en false\n";
-						$this->removeClientOnError($client);
+						$client->onDisconnect();
 						continue;
 					}
  					elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
@@ -153,7 +153,7 @@ class Server extends Socket
 					continue;
 				}
 				echo "error en while\n";
-				$this->removeClientOnError($client);
+				$client->onDisconnect();
 			}
 		}
 	}
@@ -223,8 +223,7 @@ class Server extends Socket
 		$resource = $client->getClientSocket();
 
 		$this->_removeIpFromStorage($client->getClientIp());
-		if(isset($this->_requestStorage[$clientId]))
-		{
+		if(isset($this->_requestStorage[$clientId])) {
 			unset($this->_requestStorage[$clientId]);
 		}
 		unset($this->clients[(int)$resource]);
@@ -232,20 +231,6 @@ class Server extends Socket
 		unset($this->allsockets[$index], $client);
 
 		unset($clientId, $clientIp, $clientPort, $resource);
-	}
-
-	/**
-	 * Removes a client and all references in case of timeout/error.
-	 * @param object $client The client object to remove.
-	 */
-	public function removeClientOnError($client)
-	{		// remove reference in clients app:
-		if($client->getClientApplication() !== false)
-		{
-			$client->getClientApplication()->onDisconnect($client);
-		}
-
-		$this->removeClientOnClose($client);
 	}
 
 	/**

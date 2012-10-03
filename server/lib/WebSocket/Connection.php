@@ -40,6 +40,8 @@ class Connection
    */
   protected $close_in_empty=false;
 
+  protected $connected=true;
+
   public function __construct($server, $socket)
   {
     $this->server = $server;
@@ -73,8 +75,7 @@ class Connection
 
     if($written === false || $written == 0){
       $this->log('error al escribir');
-      stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-      $this->server->removeClientOnError($this);
+      $this->onDisconnect();
       return false;
     }elseif ($written < $length) {
       $this->write_buffer = substr($this->write_buffer, $written);
@@ -82,8 +83,7 @@ class Connection
       $this->write_buffer = '';
       if($this->close_in_empty){
         $this->log('close on empty');
-        stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-        $this->server->removeClientOnError($this);
+        $this->onDisconnect();
         return false;
       }
     }
@@ -358,11 +358,23 @@ class Connection
     //    $this->server->removeClientOnClose($this);
   }
 
-
+  /**
+   * envia la señal de desconexion a la aplicacion y luego llama a onClose para que cierre el socket
+   */
   public function onDisconnect()
   {
-    $this->log('Disconnected', 'info');
-    $this->close(1000);
+    if($this->connected){
+      $this->log('onDisconnected', 'info');
+      // lo hacemos null para q no se repita
+      if($this->application){
+        $this->application->onDisconnect($this);
+      }
+      $this->close(1000);
+      $this->connected=false;
+
+      stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
+      $this->server->removeClientOnClose($this);
+    }
   }
 
   public function log($message, $type = 'info')
@@ -587,4 +599,5 @@ class Connection
   {
     return (isset($this->application)) ? $this->application : false;
   }
+
 }
