@@ -29,11 +29,17 @@ abstract class Application
         return self::$instances[$calledClassName];
     }
 
-    abstract public function onConnect($connection);
+    abstract public function onConnect(\WebSocket\Connection $connection);
 
-	abstract public function onDisconnect($connection);
+	abstract public function onDisconnect(\WebSocket\Connection $connection);
 
-	abstract public function onData($data, $client);
+	/**
+	 * process data of websocket client
+	 *
+	 * @param $data
+	 * @param $client
+	 */
+	abstract public function onData($data, \WebSocket\Connection $client);
 
 	// Common methods:
 
