@@ -37,17 +37,19 @@ abstract class Connection {
   protected $write_buffer='';
 
   /**
+   *
+   * @var string
+   */
+  protected $read_buffer='';
+
+  /**
    * close after empty write_buffer
    *
    * @var boolean
    */
   protected $close_in_empty=false;
 
-  /**
-   *
-   * @var boolean
-   */
-  protected $waitingForData = false;
+  protected $connected=false;
 
   protected $type=null;
 
@@ -91,12 +93,13 @@ abstract class Connection {
     }
   }
 
-  public function send($data) {
+
+  protected function _send($data) {
     $this->write_buffer.=$data;
     return true;
   }
 
-  public abstract function close();
+  public abstract function send($data);
 
   public abstract function onData($data);
 

@@ -8,63 +8,68 @@ namespace WebSocket\Application;
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Juan Enrique Escobar <neblipedia@gmail.com>
  */
-abstract class Application
-{
-    protected static $instances = array();
+abstract class Application {
 
-    /**
-     * Singleton
-     */
-    protected function __construct() { }
+  public static function log($message, $type = 'info'){
+    echo date('Y-m-d H:i:s') . ' [' . ($type ? $type : 'error') . '] ' . $message . PHP_EOL;
+  }
 
-    final private function __clone() { }
+  protected static $instances = array();
 
-    final public static function getInstance()
-    {
-        $calledClassName = get_called_class();
-        if (!isset(self::$instances[$calledClassName])) {
-            self::$instances[$calledClassName] = new $calledClassName();
-        }
+  /**
+   * Singleton
+  */
+  protected function __construct() {
+  }
 
-        return self::$instances[$calledClassName];
+  final private function __clone() {
+  }
+
+  final public static function getInstance(){
+    $calledClassName = get_called_class();
+    if (!isset(self::$instances[$calledClassName])) {
+      self::$instances[$calledClassName] = new $calledClassName();
     }
 
-    abstract public function onConnect(\WebSocket\Connection $connection);
+    return self::$instances[$calledClassName];
+  }
 
-	abstract public function onDisconnect(\WebSocket\Connection $connection);
+  abstract public function onConnect(\WebSocket\Connection $connection);
 
-	/**
-	 * process data of websocket client
-	 *
-	 * @param $data
-	 * @param $client
-	 */
-	abstract public function onData($data, \WebSocket\Connection $client);
+  abstract public function onDisconnect(\WebSocket\Connection $connection);
 
-	// Common methods:
+  /**
+   * process data of websocket client
+   *
+   * @param $data
+   * @param $client
+  */
+  abstract public function onData($data, \WebSocket\Connection $client);
 
-	protected function _decodeData($data)
-	{
-		$decodedData = json_decode($data, true);
-		if($decodedData === null)
-		{
-			return false;
-		}
+  // Common methods:
 
-		if(isset($decodedData['action'], $decodedData['data']) === false)
-		{
-			return false;
-		}
+  protected function _decodeData($data)
+  {
+    $decodedData = json_decode($data, true);
+    if($decodedData === null)
+    {
+      return false;
+    }
 
-		return $decodedData;
-	}
+    if(isset($decodedData['action'], $decodedData['data']) === false)
+    {
+      return false;
+    }
 
-	protected function _encodeData($action, $data){
-		$payload = array(
-			'action' => $action,
-			'data' => $data
-		);
+    return $decodedData;
+  }
 
-		return json_encode($payload);
-	}
+  protected function _encodeData($action, $data){
+    $payload = array(
+        'action' => $action,
+        'data' => $data
+    );
+
+    return json_encode($payload);
+  }
 }
