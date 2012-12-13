@@ -59,13 +59,7 @@ abstract class Application
 		return $decodedData;
 	}
 
-	protected function _encodeData($action, $data)
-	{
-		if(empty($action))
-		{
-			return false;
-		}
-
+	protected function _encodeData($action, $data){
 		$payload = array(
 			'action' => $action,
 			'data' => $data
