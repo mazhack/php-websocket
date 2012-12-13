@@ -14,13 +14,13 @@ abstract class Connection {
 
   /**
    *
-   * @var \Application\Application
+   * @var \WebSocket\Application\Application
    */
   protected $application = null;
 
   /**
    *
-   * @var \WebSocket\Socket
+   * @var \WebSocket\Server
    */
   protected $server;
 
