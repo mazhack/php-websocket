@@ -27,10 +27,11 @@ class Socket {
   protected $context = null;
   protected $ssl = false;
 
-  public function __construct($host = 'localhost', $port = 8000, $ssl = false)
+  public function __construct($host = 'localhost', $port = 8000, $ssl = false, $pem=null)
   {
     ob_implicit_flush(true);
     $this->ssl = $ssl;
+    $this->pem=$pem;
     $this->createSocket($host, $port);
   }
 
@@ -58,7 +59,7 @@ class Socket {
   }
 
   private function applySSLContext() {
-    $pem_file = './server.pem';
+    //$pem_file = './server.pem';
 
     // Generate PEM file
     /*
@@ -86,25 +87,13 @@ class Socket {
     */
 
     // apply ssl context:
-    stream_context_set_option($this->context, 'ssl', 'local_cert', $pem_file);
+    stream_context_set_option($this->context, 'ssl', 'local_cert', $this->pem);
     stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
     stream_context_set_option($this->context, 'ssl', 'verify_peer', false);
   }
 
   // method originally found in phpws project:
   protected function readBuffer($resource){
-    if($this->ssl === true)
-    {
-      $buffer = fread($resource, 8192);
-      // extremely strange chrome behavior: first frame with ssl only contains 1 byte?!
-      if(strlen($buffer) === 1)
-      {
-        $buffer .= fread($resource, 8192);
-      }
-      return $buffer;
-    }
-    else
-    {
       $buffer = '';
       $buffsize = 8192;
       do
@@ -118,12 +107,15 @@ class Socket {
         {
           return false;
         }
+        if(strlen($result) === 1 && $this->ssl){
+          $result .= fread($resource, $buffsize);
+        }
         $buffer .= $result;
         $metadata = stream_get_meta_data($resource);
-        $buffsize = ($metadata['unread_bytes'] > $buffsize) ? $buffsize : $metadata['unread_bytes'];
-      } while($metadata['unread_bytes'] > 0);
+        $unread=$metadata['unread_bytes'];
+        $buffsize = ( $unread > $buffsize) ? $buffsize : $metadata['unread_bytes'];
+      } while($unread > 0);
 
       return $buffer;
-    }
   }
 }

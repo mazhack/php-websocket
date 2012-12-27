@@ -8,8 +8,8 @@ namespace WebSocket;
  * @author Simon Samtleben <web@lemmingzshadow.net>
  * @author Juan Enrique Escobar <neblipedia@gmail.com>
  */
-class Server extends Socket
-{
+class Server extends Socket {
+
   protected $clients = array();
   protected $applications = array();
   private $_ipStorage = array();
@@ -22,9 +22,9 @@ class Server extends Socket
   private $_maxConnectionsPerIp = 5;
   private $_maxRequestsPerMinute = 50;
 
-  public function __construct($host = 'localhost', $port = 8000, $ssl = false)
+  public function __construct($host = 'localhost', $port = 8000, $ssl = false, $pem=null)
   {
-    parent::__construct($host, $port, $ssl);
+    parent::__construct($host, $port, $ssl, $pem);
     $this->log('-- Server created');
   }
 
@@ -70,7 +70,7 @@ class Server extends Socket
         {
           if(($ressource = stream_socket_accept($this->master, 2)) === false)
           {
-            $this->log('Socket error: ' . socket_strerror(socket_last_error($ressource)));
+            $this->log('Socket error: ' . socket_strerror(socket_last_error($this->master)));
             continue;
           }
           else
