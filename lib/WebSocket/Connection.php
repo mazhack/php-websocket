@@ -53,9 +53,19 @@ abstract class Connection {
 
   protected $type=null;
 
-  public function __construct($server, $socket){
+  protected $ip=null;
+
+  protected $port=null;
+
+  protected $connectionId = null;
+
+  public function __construct($server, $socket, $ip, $port){
     $this->server = $server;
     $this->socket = $socket;
+    $this->ip = $ip;
+    $this->port = $port;
+    $this->connectionId = md5($this->ip . $this->port . spl_object_hash($this));
+    $this->log('Connected');
   }
 
   public function getType(){
@@ -111,6 +121,22 @@ abstract class Connection {
 
   public function getSocket(){
     return $this->socket;
+  }
+
+  public function log($message, $type = 'info'){
+    $this->server->log('[client ' . $this->ip . ':' . $this->port . '] ' . $message, $type);
+  }
+
+  public function getClientIp(){
+    return $this->ip;
+  }
+
+  public function getClientPort(){
+    return $this->port;
+  }
+
+  public function getClientId(){
+    return $this->connectionId;
   }
 
 }

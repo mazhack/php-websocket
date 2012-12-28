@@ -8,26 +8,13 @@ namespace WebSocket;
  */
 class ConnectionWs extends ConnectionWsBase {
 
-  protected $ip;
-
-  protected $port;
-
-  protected $connectionId = null;
-
-  public function __construct($server, $socket)
-  {
-    parent::__construct($server, $socket);
+  public function __construct($server, $socket){
 
     $this->type=self::TYPE_WS;
-
     // set some client-information:
     $socketName = stream_socket_get_name($socket, true);
     $tmp = explode(':', $socketName);
-    $this->ip = $tmp[0];
-    $this->port = $tmp[1];
-    $this->connectionId = md5($this->ip . $this->port . spl_object_hash($this));
-
-    $this->log('Connected');
+    parent::__construct($server, $socket, $tmp[0], $tmp[1]);
   }
 
   protected function handshake($data){
@@ -229,25 +216,6 @@ class ConnectionWs extends ConnectionWsBase {
         $this->application->onDisconnect($this);
       }
     }
-  }
-
-  public function log($message, $type = 'info'){
-    $this->server->log('[client ' . $this->ip . ':' . $this->port . '] ' . $message, $type);
-  }
-
-  public function getClientIp()
-  {
-    return $this->ip;
-  }
-
-  public function getClientPort()
-  {
-    return $this->port;
-  }
-
-  public function getClientId()
-  {
-    return $this->connectionId;
   }
 
 }

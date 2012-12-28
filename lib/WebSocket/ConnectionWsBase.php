@@ -10,6 +10,13 @@ abstract class ConnectionWsBase extends Connection {
 
   protected $close_on_unmasked=true;
 
+  /**
+   * manipula los datos del handshake para establecer la conexion
+   *
+   * @param unknown $data
+   */
+  protected abstract function handshake($data);
+
   public function onData($data){
     if($this->connected){
       $this->read_buffer.=$data;
