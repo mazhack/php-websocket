@@ -15,6 +15,7 @@ namespace WebSocket;
  * This is the main socket class
  */
 class Socket {
+
   /**
    * @var Socket Holds the master socket
    */
@@ -24,7 +25,9 @@ class Socket {
    * @var array Holds all connected sockets
    */
   protected $allsockets = array();
+
   protected $context = null;
+
   protected $ssl = false;
 
   public function __construct($host = 'localhost', $port = 8000, $ssl = false, $pem=null)
@@ -94,28 +97,29 @@ class Socket {
 
   // method originally found in phpws project:
   protected function readBuffer($resource){
-      $buffer = '';
-      $buffsize = 8192;
-      do
+    $buffer = '';
+    $buffsize = 4096;
+    do
+    {
+      if(feof($resource))
       {
-        if(feof($resource))
-        {
-          return false;
-        }
-        $result = fread($resource, $buffsize);
-        if($result === false || feof($resource))
-        {
-          return false;
-        }
-        if(strlen($result) === 1 && $this->ssl){
-          $result .= fread($resource, $buffsize);
-        }
-        $buffer .= $result;
-        $metadata = stream_get_meta_data($resource);
-        $unread=$metadata['unread_bytes'];
-        $buffsize = ( $unread > $buffsize) ? $buffsize : $metadata['unread_bytes'];
-      } while($unread > 0);
+        return false;
+      }
+      $result = fread($resource, $buffsize);
+      if($result == false || feof($resource))
+      {
+        return false;
+      }
+      if($this->ssl && strlen($result) == 1 ){
+        $result .= fread($resource, $buffsize);
+      }
+      $buffer .= $result;
+      $metadata = stream_get_meta_data($resource);
+      $unread=$metadata['unread_bytes'];
+      $buffsize = ( $unread > $buffsize) ? $buffsize : $metadata['unread_bytes'];
+    } while($unread > 0);
 
-      return $buffer;
+    return $buffer;
   }
+
 }

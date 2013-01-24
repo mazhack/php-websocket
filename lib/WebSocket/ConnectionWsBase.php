@@ -17,6 +17,8 @@ abstract class ConnectionWsBase extends Connection {
    */
   protected abstract function handshake($data);
 
+  protected abstract function processData($data);
+
   public function onData($data){
     if($this->connected){
       $this->read_buffer.=$data;
@@ -179,13 +181,11 @@ abstract class ConnectionWsBase extends Connection {
     $payloadLength = ord($data[1]) & 127;
 
     // close connection if unmasked frame is received:
-    if($this->close_on_unmasked && $isMasked == false)
-    {
+    if($this->close_on_unmasked && $isMasked == false) {
       $this->close(1002);
     }
 
-    if($payloadLength === 126)
-    {
+    if($payloadLength == 126) {
       if($isMasked){
         $mask = substr($data, 4, 4);
         $payloadOffset = 8;
@@ -193,9 +193,7 @@ abstract class ConnectionWsBase extends Connection {
         $payloadOffset=4;
       }
       $dataLength = bindec(sprintf('%08b', ord($data[2])) . sprintf('%08b', ord($data[3]))) + $payloadOffset;
-    }
-    elseif($payloadLength === 127)
-    {
+    } elseif($payloadLength == 127) {
       if($isMasked){
         $mask = substr($data, 10, 4);
         $payloadOffset = 14;
@@ -209,9 +207,7 @@ abstract class ConnectionWsBase extends Connection {
       }
       $dataLength = bindec($tmp) + $payloadOffset;
       unset($tmp);
-    }
-    else
-    {
+    } else {
       if($isMasked){
         $mask = substr($data, 2, 4);
         $payloadOffset = 6;
@@ -225,7 +221,7 @@ abstract class ConnectionWsBase extends Connection {
       return false;
     }
 
-    if($isMasked === true){
+    if($isMasked == true){
       for($i = $payloadOffset; $i < $dataLength; $i++)
       {
         $j = $i - $payloadOffset;

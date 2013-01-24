@@ -104,7 +104,8 @@ class ConnectionWs extends ConnectionWsBase {
     }
     $response.= "\r\n";
 
-    $this->write_buffer.=$response;
+    //$this->write_buffer.=$response;
+    $this->_send($response);
 
     $this->connected = true;
     $this->log('Handshake sent');
@@ -144,7 +145,7 @@ class ConnectionWs extends ConnectionWsBase {
   }
 
   protected function processData($data) {
-    while(true){
+    do{
       $decodedData=$this->hybi10Decode();
 
       if($decodedData == false){
@@ -189,7 +190,7 @@ class ConnectionWs extends ConnectionWsBase {
           $this->log('Disconnected');
           break;
       }
-    }
+    }while(true);
 
     return true;
   }
@@ -209,13 +210,12 @@ class ConnectionWs extends ConnectionWsBase {
       $this->close(1000);
       $this->connected=false;
 
-      stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-      $this->server->removeClientOnClose($this);
-
       if($this->application){
         $this->application->onDisconnect($this);
       }
     }
+    // lo removemos del listado de clientes
+    $this->server->removeClientOnClose($this);
   }
 
 }

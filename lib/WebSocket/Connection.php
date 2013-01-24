@@ -31,10 +31,11 @@ abstract class Connection {
   protected $socket;
 
   /**
+   * debe ser escrita usando _send
    *
    * @var string
    */
-  protected $write_buffer='';
+  private $write_buffer='';
 
   /**
    *
@@ -86,7 +87,7 @@ abstract class Connection {
 
   public function doWrite(){
     $length = strlen($this->write_buffer);
-    $written = @fwrite($this->socket, $this->write_buffer, $length);
+    $written = fwrite($this->socket, $this->write_buffer);
 
     if($written === false || $written == 0){
       // error on write close the socket
@@ -102,7 +103,6 @@ abstract class Connection {
       }
     }
   }
-
 
   protected function _send($data) {
     $this->write_buffer.=$data;
