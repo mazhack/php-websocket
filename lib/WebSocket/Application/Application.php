@@ -34,7 +34,13 @@ abstract class Application {
     return self::$instances[$calledClassName];
   }
 
-  abstract public function onConnect(\WebSocket\Connection $connection);
+  /**
+   *
+   *
+   * @param \WebSocket\Connection $connection
+   * @param array $query array with the url parameters
+   */
+  abstract public function onConnect(\WebSocket\Connection $connection, array $query);
 
   abstract public function onDisconnect(\WebSocket\Connection $connection);
 

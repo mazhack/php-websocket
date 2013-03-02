@@ -31,7 +31,12 @@ class ConnectionWs extends ConnectionWsBase {
     }
 
     // check for valid application:
-    $path = $matches[1];
+    $data=parse_url($matches[1]);
+    $query=array();
+    if(isset($data['query'])){
+      parse_str($data['query'], $query);
+    }
+    $path = $data['path'];
     $this->application = $this->server->getApplication(substr($path, 1));
     if(!$this->application)
     {
@@ -109,7 +114,7 @@ class ConnectionWs extends ConnectionWsBase {
 
     $this->connected = true;
     $this->log('Handshake sent');
-    $this->application->onConnect($this);
+    $this->application->onConnect($this, $query);
 
     return true;
   }
